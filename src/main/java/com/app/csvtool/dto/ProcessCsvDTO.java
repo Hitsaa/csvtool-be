@@ -11,6 +11,7 @@ import java.util.Map;
 public class ProcessCsvDTO {
     private String fileName;
     private String jsonFileName;
+    private List<String> csvHeaders;
     private Map<String,String> jsonKeysMap;
     private List<CsvStaticFieldsDto> staticFields;
 }

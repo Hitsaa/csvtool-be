@@ -10,4 +10,6 @@ public interface UploadFileService {
     List<String> uploadCsvFile(UploadCsvDto uploadCsvDto);
 
     FileSystemResource processCsvFile(ProcessCsvDTO processCsvDTO);
+
+    Object getCsvData(ProcessCsvDTO processCsvDTO);
 }

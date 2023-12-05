@@ -202,13 +202,45 @@ public class UploadServiceImpl implements UploadFileService {
             String jsonFilePath = storageService.getRootLocationPath().toString() + "/"+processCsvDTO.getJsonFileName();
             File jsonFile = new File(jsonFilePath);
             FileUtils.writeStringToFile(jsonFile, formattedJson, StandardCharsets.UTF_8);
-//            objectMapper.writeValue(jsonFile, formattedJson);
             return new FileSystemResource(jsonFile);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Object getCsvData(ProcessCsvDTO processCsvDto) {
+        Resource csvFile = storageService.loadAsResource(processCsvDto.getFileName());
+        Map<String,Object> jsonKeysMap = new HashMap<>();
+        try {
+            Reader reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream()));
+            CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withDelimiter(';').withHeader());
+            List<String> headers = getCsvHeaders(csvParser);
+            Map<String, String> csvHeaders = getNormalizedCsvHeaders(headers);
+            String countryHeader = csvHeaders.get("country");
+            String languageHeader = csvHeaders.get("language");
+            String isoHeader = csvHeaders.get("iso");
+            String postcodeHeader = csvHeaders.get("postcode");
+            String localityHeader = csvHeaders.get("locality");
+            String region1Header = csvHeaders.get("region1");
+            String region2Header = csvHeaders.get("region2");
+            String region3Header = csvHeaders.get("region3");
+            String region4Header = csvHeaders.get("region4");
+            Set<String> region1Set = new HashSet<>();
+            for (CSVRecord csvRecord : csvParser) {
+                String region1Name = csvRecord.get(region1Header);
+                if(!region1Set.contains(region1Name)) {
+                    region1Set.add(region1Name);
+                }
+            }
+            jsonKeysMap.put("region1", region1Set);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return jsonKeysMap;
     }
 
     private List<String> getCsvHeaders(CSVParser csvParser) {

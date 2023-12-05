@@ -50,8 +50,8 @@ public class UploadFileController {
         return ResponseEntity.ok(uploadFileService.uploadCsvFile(uploadCsvDto));
     }
 
-    @GetMapping("/getdata")
-    public ResponseEntity<String> getUserData() {
-        return ResponseEntity.ok("You are great");
+    @GetMapping("/getCsvData")
+    public ResponseEntity<Object> getCsvData(@ModelAttribute ProcessCsvDTO processCsvDto) {
+        return  ResponseEntity.ok(uploadFileService.getCsvData(processCsvDto));
     }
 }
