@@ -1,6 +1,7 @@
 package com.app.csvtool.controller;
 
 import com.app.csvtool.dto.ProcessCsvDTO;
+import com.app.csvtool.dto.UniqueHeadersDto;
 import com.app.csvtool.dto.UploadCsvDto;
 import com.app.csvtool.service.UploadFileService;
 import lombok.AllArgsConstructor;
@@ -13,8 +14,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @AllArgsConstructor
 @RestController
@@ -50,8 +53,13 @@ public class UploadFileController {
         return ResponseEntity.ok(uploadFileService.uploadCsvFile(uploadCsvDto));
     }
 
+//    @GetMapping("/getCsvData")
+//    public ResponseEntity<Object> getCsvData(@ModelAttribute ProcessCsvDTO processCsvDto) {
+//        return  ResponseEntity.ok(uploadFileService.getCsvData(processCsvDto));
+//    }
+
     @GetMapping("/getCsvData")
-    public ResponseEntity<Object> getCsvData(@ModelAttribute ProcessCsvDTO processCsvDto) {
-        return  ResponseEntity.ok(uploadFileService.getCsvData(processCsvDto));
+    public ResponseEntity<Set<Map<String, ArrayList<String>>>> getUniqueCsvData(@RequestBody UniqueHeadersDto uniqueHeadersDto){
+        return  ResponseEntity.ok(uploadFileService.getUniqueCsvData(uniqueHeadersDto));
     }
 }

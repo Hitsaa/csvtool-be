@@ -2,6 +2,7 @@ package com.app.csvtool.service;
 
 import com.app.csvtool.dto.CsvStaticFieldsDto;
 import com.app.csvtool.dto.ProcessCsvDTO;
+import com.app.csvtool.dto.UniqueHeadersDto;
 import com.app.csvtool.dto.UploadCsvDto;
 import com.app.csvtool.enums.DirectionType;
 import com.app.csvtool.exception.AppException;
@@ -243,6 +244,42 @@ public class UploadServiceImpl implements UploadFileService {
         return jsonKeysMap;
     }
 
+    @Override
+    public Set<Map<String, ArrayList<String>>> getUniqueCsvData(UniqueHeadersDto uniqueHeadersDto) {
+        Resource csvFile = storageService.loadAsResource(uniqueHeadersDto.getFileName());
+        Set<Map<String, ArrayList<String>>> listOfMap = new HashSet<>();
+
+        try{
+            Reader reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream()));
+            CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withDelimiter(';').withHeader());
+            Set<String> selectedHeaders = uniqueHeadersDto.getHeaders();
+            List<String> headers = getCsvHeaders(csvParser);
+            List<CSVRecord> allRecords = csvParser.getRecords();
+            System.out.println(headers);
+            System.out.println(selectedHeaders);
+
+            if (allRecords != null && !allRecords.isEmpty()) {
+                Map<String, ArrayList<String>> map = new HashMap<>();
+                for(String header : selectedHeaders){
+                    if(headers.contains(header)){
+                        Set<String> uniqueValues = getUniqueValues(allRecords, header);
+                        ArrayList<String> valuesArray = new ArrayList<>();
+                        valuesArray.addAll(uniqueValues);
+                        map.put(header, valuesArray);
+                    }else {
+                        throw new AppException("Header " + header + " not found", HttpStatus.BAD_REQUEST);
+                    }
+                }
+                listOfMap.add(map);
+            } else {
+                throw new AppException("CSV file is empty", HttpStatus.BAD_REQUEST);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return listOfMap;
+    }
+
     private List<String> getCsvHeaders(CSVParser csvParser) {
         List<String> allHeaders = new ArrayList<>();
         List<String> csvHeaders = csvParser.getHeaderNames();
@@ -277,4 +314,30 @@ public class UploadServiceImpl implements UploadFileService {
             return jsonString; // Return the original string if an error occurs
         }
     }
+
+    private static int getHeaderIndex(CSVRecord headerRecord, String headerName) {
+        for (int i = 0; i < headerRecord.size(); i++) {
+            if (headerRecord.get(i).equals(headerName)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    private static Set<String> getUniqueValues(List<CSVRecord> records, String headerName) {
+        Set<String> uniqueValues = new HashSet<>();
+        for (CSVRecord record : records) {
+            if (record.isMapped(headerName)) {
+                uniqueValues.add(record.get(headerName));
+            }
+        }
+        return uniqueValues;
+    }
+
+    private static List<CSVRecord> readCSV(String filePath) throws IOException {
+        try (FileReader fileReader = new FileReader(filePath);
+             CSVParser csvParser = CSVFormat.DEFAULT.withHeader().parse(fileReader)) {
+            return csvParser.getRecords();
+        }
+    }
+
 }
